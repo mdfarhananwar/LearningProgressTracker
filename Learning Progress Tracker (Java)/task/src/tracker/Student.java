@@ -31,10 +31,10 @@ public class Student {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.completedJavaPercentage = getPercentage(javaToCompletePoints,Java);
-        this.completedDSAPercentage = getPercentage(dsaToCompletePoints, DSA);
-        this.completedDatabasesPercentage = getPercentage(databasesToCompletePoints, Databases);
-        this.completedSpringPercentage = getPercentage(springToCompletePoints, Spring);
+//        this.completedJavaPercentage = getPercentage(javaToCompletePoints,(double) Java);
+//        this.completedDSAPercentage = getPercentage(dsaToCompletePoints, (double) DSA);
+//        this.completedDatabasesPercentage = getPercentage(databasesToCompletePoints, (double) Databases);
+//        this.completedSpringPercentage = getPercentage(springToCompletePoints, (double) Spring);
     }
 
     public int getStudentId() {
@@ -77,6 +77,7 @@ public class Student {
     }
 
     public void setJava(int java) {
+        getPercentage(javaToCompletePoints, java);
         Java = java;
     }
 
@@ -85,6 +86,7 @@ public class Student {
     }
 
     public void setDSA(int DSA) {
+        getPercentage(javaToCompletePoints, DSA);
         this.DSA = DSA;
     }
 
@@ -93,6 +95,7 @@ public class Student {
     }
 
     public void setDatabases(int databases) {
+        getPercentage(javaToCompletePoints, databases);
         Databases = databases;
     }
 
@@ -101,6 +104,7 @@ public class Student {
     }
 
     public void setSpring(int spring) {
+        getPercentage(javaToCompletePoints, spring);
         Spring = spring;
     }
 
@@ -108,34 +112,63 @@ public class Student {
         double result = points / maxPoints * 100;
         return result;
     }
-
     public double getCompletedJavaPercentage() {
         return completedJavaPercentage;
     }
 
-    public void setCompletedJavaPercentage(double completedJavaPercentage) {
-        this.completedJavaPercentage = completedJavaPercentage;
+    public void setCompletedJavaPercentage(int java) {
+        this.completedJavaPercentage = getPercentage(javaToCompletePoints, java);
     }
 
     public double getCompletedDSAPercentage() {
         return completedDSAPercentage;
     }
 
-    public void setCompletedDSAPercentage(double completedDSAPercentage) {
-        this.completedDSAPercentage = completedDSAPercentage;
+    public void setCompletedDSAPercentage(int dsa) {
+        this.completedDSAPercentage = getPercentage(dsaToCompletePoints, dsa);;
     }
 
     public double getCompletedDatabasesPercentage() {
         return completedDatabasesPercentage;
     }
 
-    public void setCompletedDatabasesPercentage(double completedDatabasesPercentage) {
-        this.completedDatabasesPercentage = completedDatabasesPercentage;
+    public void setCompletedDatabasesPercentage(int databases) {
+        this.completedDatabasesPercentage = getPercentage(databasesToCompletePoints, databases);
     }
     public double getCompletedSpringPercentage() {
         return completedSpringPercentage;
     }
-    public void setCompletedSpringPercentage(double completedSpringPercentage) {
-        this.completedSpringPercentage = completedSpringPercentage;
+    public void setCompletedSpringPercentage(int spring) {
+        this.completedSpringPercentage = getPercentage(springToCompletePoints, spring);
     }
+
+//    public double getCompletedJavaPercentage() {
+//        return completedJavaPercentage;
+//    }
+//
+//    public void setCompletedJavaPercentage(double completedJavaPercentage) {
+//        this.completedJavaPercentage = completedJavaPercentage;
+//    }
+//
+//    public double getCompletedDSAPercentage() {
+//        return completedDSAPercentage;
+//    }
+//
+//    public void setCompletedDSAPercentage(double completedDSAPercentage) {
+//        this.completedDSAPercentage = completedDSAPercentage;
+//    }
+//
+//    public double getCompletedDatabasesPercentage() {
+//        return completedDatabasesPercentage;
+//    }
+//
+//    public void setCompletedDatabasesPercentage(double completedDatabasesPercentage) {
+//        this.completedDatabasesPercentage = completedDatabasesPercentage;
+//    }
+//    public double getCompletedSpringPercentage() {
+//        return completedSpringPercentage;
+//    }
+//    public void setCompletedSpringPercentage(double completedSpringPercentage) {
+//        this.completedSpringPercentage = completedSpringPercentage;
+//    }
 }
