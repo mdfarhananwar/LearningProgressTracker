@@ -15,12 +15,16 @@ public class Main {
     private static final String COMMAND_DSA = "dsa";
     private static final String COMMAND_DATABASES = "databases";
     private static final String COMMAND_SPRING = "spring";
+    private static final String COMMAND_NOTIFY = "notify";
+
+
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Learning Progress Tracker");
         List<Student> students = new ArrayList<>();
         boolean isAddingStudentsMode = false;
+        Set<String> notifiedUsers = new HashSet<>();
 
         while (true) {
             String command = scanner.nextLine().trim();
@@ -33,13 +37,15 @@ public class Main {
             } else if (command.equalsIgnoreCase(COMMAND_ADD_STUDENTS)) {
                 handleAddStudentsCommand(scanner, students);
             } else if (command.equalsIgnoreCase(COMMAND_LIST)) {
-                printListOfIds(students, scanner, isAddingStudentsMode);
+                printListOfIds(students, scanner, isAddingStudentsMode,notifiedUsers);
             } else if (command.equalsIgnoreCase(COMMAND_ADD_POINTS)) {
-                addPoints(scanner, students);
+                addPoints(scanner, students, notifiedUsers);
             } else if (command.equalsIgnoreCase(COMMAND_STATISTICS)) {
                 getStatistics(students, scanner);
             } else if (command.equalsIgnoreCase(COMMAND_FIND)) {
                 find(students, scanner);
+            } else if (command.equalsIgnoreCase(COMMAND_NOTIFY)) {
+                getNotified(students, notifiedUsers, scanner);
             }
             else if (command.equalsIgnoreCase(COMMAND_BACK)) {
                 handleBackCommand(isAddingStudentsMode, students);
@@ -118,7 +124,7 @@ public class Main {
     private static boolean isEmailAlreadyExists(String email, List<Student> students) {
         return students.stream().anyMatch(student -> student.getEmail().equalsIgnoreCase(email));
     }
-    private static void printListOfIds(List<Student> students, Scanner scanner, boolean isAddingStudentsMode) {
+    private static void printListOfIds(List<Student> students, Scanner scanner, boolean isAddingStudentsMode, Set<String> notifiedUsers) {
         if (students.isEmpty()) {
             System.out.println("No students found");
         } else {
@@ -137,26 +143,29 @@ public class Main {
             } else if (command.equalsIgnoreCase(COMMAND_ADD_STUDENTS)) {
                 handleAddStudentsCommand(scanner, students);
             } else if (command.equalsIgnoreCase(COMMAND_ADD_POINTS)) {
-                addPoints(scanner, students);
+                addPoints(scanner, students, notifiedUsers);
             } else if (command.equalsIgnoreCase(COMMAND_FIND)) {
                 find(students, scanner);
             } else if (command.equalsIgnoreCase(COMMAND_BACK)) {
                 handleBackCommand(isAddingStudentsMode, students);
             } else if (command.equalsIgnoreCase(COMMAND_STATISTICS)) {
                 getStatistics(students, scanner);
+            } else if (command.equalsIgnoreCase(COMMAND_NOTIFY)) {
+                getNotified(students,notifiedUsers, scanner);
             } else {
                 System.out.println("Unknown command!");
             }
         }
     }
-    private static void addPoints(Scanner scanner, List<Student> students) {
+    private static void addPoints(Scanner scanner, List<Student> students, Set<String> notifiedUsers) {
         System.out.println("Enter an id and points or 'back' to return:");
-
-
         while (true) {
             String[] pointsWithIdArray = scanner.nextLine().split(" ");
             if (pointsWithIdArray.length == 1 && pointsWithIdArray[0].equalsIgnoreCase(COMMAND_STATISTICS)) {
                 getStatistics(students, scanner);
+            } else
+            if (pointsWithIdArray.length == 1 && pointsWithIdArray[0].equalsIgnoreCase(COMMAND_NOTIFY)) {
+                getNotified(students,notifiedUsers, scanner);
             } else
             if (pointsWithIdArray.length == 1 && pointsWithIdArray[0].equalsIgnoreCase(COMMAND_BACK)) {
                 handleBackCommand(true, students);
@@ -169,7 +178,6 @@ public class Main {
             int  point1, point2, point3, point4;
             String studentId = pointsWithIdArray[0];
             try {
-
                 point1 = Integer.parseInt(pointsWithIdArray[1]);
                 point2 = Integer.parseInt(pointsWithIdArray[2]);
                 point3 = Integer.parseInt(pointsWithIdArray[3]);
@@ -232,7 +240,6 @@ public class Main {
                         " Spring=" + student.getSpring());
             }
         }
-
         if (!scanner.hasNextInt()) {
             String command = scanner.nextLine();
             if (command.equalsIgnoreCase(COMMAND_BACK)) {
@@ -291,24 +298,16 @@ public class Main {
     }
 
     private static void handleCourseCommand(List<Student> students, String course) {
-        boolean isCourseJava = false;
-        boolean isCourseDsa = false;
-        boolean isCourseDatabases = false;
-        boolean isCourseSpring = false;
         if (course.equalsIgnoreCase("dsa")) {
-            isCourseDsa = true;
             sortAndPrintResults(students, "DSA");
         } else {
             if (course.equalsIgnoreCase("java")) {
-                isCourseJava = true;
                 sortAndPrintResults(students, "Java");
             }
             if (course.equalsIgnoreCase("databases")) {
-                isCourseDatabases = true;
                 sortAndPrintResults(students, "Databases");
             }
             if (course.equalsIgnoreCase("spring")) {
-                isCourseSpring = true;
                 sortAndPrintResults(students, "Spring");
             }
         }
@@ -323,7 +322,7 @@ public class Main {
         System.out.println("id points completed");
 
         // Sort the list using the provided comparator
-        Collections.sort(students, comparator);
+        students.sort(comparator);
 
         // Print the results for the current course
         for (Student student : students) {
@@ -337,36 +336,26 @@ public class Main {
         }
     }
     private static int getPointsForCourse(Student student, String course) {
-        switch (course) {
-            case "Java":
-                return student.getJava();
-            case "DSA":
-                return student.getDSA();
-            case "Databases":
-                return student.getDatabases();
-            case "Spring":
-                return student.getSpring();
-            default:
-                throw new IllegalArgumentException("Unknown course: " + course);
-        }
+        return switch (course) {
+            case "Java" -> student.getJava();
+            case "DSA" -> student.getDSA();
+            case "Databases" -> student.getDatabases();
+            case "Spring" -> student.getSpring();
+            default -> throw new IllegalArgumentException("Unknown course: " + course);
+        };
     }
     private static String getCompletedPercentageForCourse(Student student, String course) {
         String javaPercentageInRounded = getNumberInRounding(student.getCompletedJavaPercentage()) + "%";
         String databasePercentageInRounded = getNumberInRounding(student.getCompletedDatabasesPercentage()) + "%";
         String dsaPercentageInRounded = getNumberInRounding(student.getCompletedDSAPercentage()) + "%";
         String springPercentageInRounded = getNumberInRounding(student.getCompletedSpringPercentage()) + "%";
-        switch (course) {
-            case "Java":
-                return javaPercentageInRounded;
-            case "DSA":
-                return dsaPercentageInRounded ;
-            case "Databases":
-                return databasePercentageInRounded;
-            case "Spring":
-                return springPercentageInRounded;
-            default:
-                throw new IllegalArgumentException("Unknown course: " + course);
-        }
+        return switch (course) {
+            case "Java" -> javaPercentageInRounded;
+            case "DSA" -> dsaPercentageInRounded;
+            case "Databases" -> databasePercentageInRounded;
+            case "Spring" -> springPercentageInRounded;
+            default -> throw new IllegalArgumentException("Unknown course: " + course);
+        };
     }
 
     private static String leastTakenCourse(List<Student> students) {
@@ -467,7 +456,6 @@ public class Main {
             databasesCount += student.getCompletedDatabasesPercentage();
             springCount += student.getCompletedSpringPercentage();
         }
-
         double maxCount = Math.max(javaCount, Math.max(dsaCount, Math.max(databasesCount, springCount)));
         String result = "";
         if (maxCount == 0) {
@@ -546,10 +534,8 @@ public class Main {
         int dsaCount = 0;
         int databasesCount = 0;
         int springCount = 0;
-        double count = 0;
 
         for (Student student : students) {
-            count++;
             javaCount += student.getJava();
             dsaCount += student.getDSA();
             databasesCount += student.getDatabases();
@@ -591,10 +577,8 @@ public class Main {
         int dsaCount = 0;
         int databasesCount = 0;
         int springCount = 0;
-        double count = 0;
 
         for (Student student : students) {
-            count++;
             javaCount += student.getJava();
             dsaCount += student.getDSA();
             databasesCount += student.getDatabases();
@@ -639,6 +623,70 @@ public class Main {
 
         // Convert the rounded BigDecimal back to double if needed
         return roundedNumber.doubleValue();
+    }
+
+    private static void getNotified(List<Student> students, Set<String> notifiedUsers, Scanner scanner) {
+        getNotificationsForUsers(students, notifiedUsers);
+        while (true) {
+            String command = scanner.nextLine();
+            if (command.equalsIgnoreCase(COMMAND_NOTIFY)) {
+                getNotificationsForUsers(students, notifiedUsers);
+            } else if (command.equalsIgnoreCase(COMMAND_BACK)) {
+                handleBackCommand(true, students);
+                break;
+            } else if (command.equalsIgnoreCase(COMMAND_EXIT)) {
+                System.out.println("Bye!");
+                break;
+            }
+        }
+    }
+    private static void notifyUser(Student student, String course) {
+        System.out.println("To: " + student.getEmail());
+        System.out.println("Re: Your Learning Progress");
+        System.out.println("Hello, " + student.getFirstName() + " " + student.getLastName() + "! You have accomplished our " + course + " course!");
+    }
+    private static boolean isNotNotified(Set<String> notifiedUsers, String email) {
+        return  !notifiedUsers.contains(email);
+    }
+
+    private static void getNotificationsForUsers(List<Student> students, Set<String> notifiedUsers) {
+        int count = 0;
+        for (Student student : students) {
+            boolean isNotNotified = isNotNotified(notifiedUsers, student.getEmail());
+            boolean isJavaCompleted = student.getCompletedJavaPercentage() == 100;
+            boolean isDsaCompleted = student.getCompletedDSAPercentage() == 100;
+            boolean isDatabaseCompleted = student.getCompletedDatabasesPercentage() == 100;
+            boolean isSpringCompleted = student.getCompletedSpringPercentage() == 100;
+            if (isNotNotified) {
+                if (isJavaCompleted) {
+                    notifyUser(student, "Java");
+                    notifiedUsers.add(student.getEmail());
+                    count++;
+                }
+                if (isDsaCompleted) {
+                    notifyUser(student, "DSA");
+                    notifiedUsers.add(student.getEmail());
+                    if (!isJavaCompleted) {
+                        count++;
+                    }
+                }
+                if (isDatabaseCompleted) {
+                    notifyUser(student, "Database");
+                    notifiedUsers.add(student.getEmail());
+                    if (!isDsaCompleted) {
+                        count++;
+                    }
+                }
+                if (isSpringCompleted) {
+                    notifyUser(student, "Spring");
+                    notifiedUsers.add(student.getEmail());
+                    if (!isDatabaseCompleted) {
+                        count++;
+                    }
+                }
+            }
+        }
+        System.out.println("Total " + count + " students have been notified.");
     }
 
 

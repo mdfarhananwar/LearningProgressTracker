@@ -511,7 +511,6 @@ public class LearningProgressTrackerTest extends StageTest<String> {
         if (lines.length == 0) {
             return CheckResult.wrong(feedback);
         }
-
         if (anyMissingKeywords(lines[0], "course", "details", "back", "quit")) {
             return CheckResult.wrong(feedback + lines[0]);
         }
@@ -524,10 +523,10 @@ public class LearningProgressTrackerTest extends StageTest<String> {
         List<String> categories = List.of("Most popular: n/a", "Least popular: n/a",
                 "Highest activity: n/a", "Lowest activity: n/a", "Easiest course: n/a",
                 "Hardest course: n/a");
-        for (int i = 0; i < categories.size(); i++) {
-            if (incorrectString(lines[i + 1], categories.get(i))) {
-                return CheckResult.wrong("Expected: " + categories.get(i) +
-                        ", but your output was " + lines[i + 1]);
+        for (int i = 1; i < lines.length; i++) {
+            if (incorrectString(lines[i], categories.get(i - 1))) {
+                return CheckResult.wrong("Expected: " + categories.get(i - 1) +
+                        ", but your output was " + lines[i]);
             }
         }
 
@@ -803,6 +802,84 @@ public class LearningProgressTrackerTest extends StageTest<String> {
                 !linesSpring.get(2).startsWith(ids.get(0)) || !linesSpring.get(3).startsWith(ids.get(1))) {
             return CheckResult.wrong("Your Spring student list either contains incorrect data " +
                     "or is incorrectly sorted");
+        }
+
+        return CheckResult.correct();
+    }
+
+    @DynamicTest(order = 22)
+    CheckResult testNotification1() {
+        TestedProgram main = new TestedProgram();
+        main.start();
+
+        List<String> output = expect(main.execute("notify")).toContain(1).lines();
+        if (output.stream()
+                .map(String::toLowerCase)
+                .allMatch(str -> anyMissingKeywords(str, "total", "0", "notified"))) {
+            return CheckResult.wrong("Expected output was \"Total 0 students have been notified.\", " +
+                    "but your output was: " + String.join("\n", output));
+        }
+
+        return CheckResult.correct();
+    }
+
+    @DynamicTest(order = 23)
+    CheckResult testNotification2() {
+        TestedProgram main = new TestedProgram();
+        main.start();
+
+        main.execute("add students");
+        main.execute("John Doe johnd@email.net");
+        main.execute("Jane Spark jspark@yahoo.com");
+        main.execute("back");
+
+        List<String> lines = expect(main.execute("list")).toContain().lines();
+        List<String> ids = parseIds(lines);
+
+        main.execute("add points");
+        main.execute(String.format("%s 600 400 0 0", ids.get(0)));
+        main.execute("back");
+
+        List<String> output = expect(main.execute("notify")).toContain(7).lines();
+
+        if (!output.get(0).toLowerCase().startsWith("to:") ||
+                !output.get(0).toLowerCase().contains("johnd@email.net") ||
+                !output.get(1).toLowerCase().startsWith("re:") ||
+                anyMissingKeywords(output.get(1), "learning", "progress") ||
+                anyMissingKeywords(output.get(2), "john", "doe", "accomplished") ||
+                !output.get(2).toLowerCase().contains("java") && !output.get(5).toLowerCase().contains("java")) {
+            return CheckResult.wrong("You program should have printed the following:\nTo: johnd@email.net\n" +
+                    "Re: Your Learning Progress\nHello, John Doe! You have accomplished our Java course!\n" +
+                    "but your output was: \n" + output.stream().limit(3).collect(Collectors.joining("\n")));
+        }
+
+        if (!output.get(3).toLowerCase().startsWith("to:") ||
+                !output.get(3).toLowerCase().contains("johnd@email.net") ||
+                !output.get(4).toLowerCase().startsWith("re:") ||
+                anyMissingKeywords(output.get(4), "learning", "progress") ||
+                anyMissingKeywords(output.get(5), "john", "doe", "accomplished", "course") ||
+                !output.get(5).toLowerCase().contains("dsa") && !output.get(2).toLowerCase().contains("dsa")) {
+            return CheckResult.wrong("You program should have printed the following:\nTo: johnd@email.net\n" +
+                    "Re: Your Learning Progress\nHello, John Doe! You have accomplished our DSA course!\n" +
+                    "but your output was: \n" + output.stream().limit(3).collect(Collectors.joining("\n")));
+        }
+
+        if (anyMissingKeywords(output.get(6).toLowerCase(), "total", "1", "notified")) {
+            return CheckResult.wrong("Expected output was \"Total 1 student has been notified.\", but your output was: \n" +
+                    String.join("\n", output));
+        }
+
+        if (output.stream().map(String::toLowerCase).anyMatch(str ->
+                str.contains("jane") || str.contains("spark") || str.contains("jspark@yahoo.com"))) {
+            return CheckResult.wrong("Your notification should not mention Jane Spark");
+        }
+
+        output = expect(main.execute("notify")).toContain(1).lines();
+        if (output.stream()
+                .map(String::toLowerCase)
+                .allMatch(str -> anyMissingKeywords(str, "total", "0", "notified"))) {
+            return CheckResult.wrong("Expected output was \"Total 0 students have been notified\", " +
+                    "but your output was: " + String.join("\n", output));
         }
 
         return CheckResult.correct();
